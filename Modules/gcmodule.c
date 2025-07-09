@@ -397,11 +397,11 @@ validate_list(PyGC_Head *head, enum flagstates flags)
     PyGC_Head *gc = GC_NEXT(head);
     while (gc != head) {
         PyGC_Head *trueprev = GC_PREV(gc);
-        PyGC_Head *truenext = (PyGC_Head *)(gc->_gc_next  & ~NEXT_MASK_UNREACHABLE);
+        PyGC_Head *truenext = zandptr(gc->_gc_next, ~NEXT_MASK_UNREACHABLE);
         assert(truenext != NULL);
         assert(trueprev == prev);
-        assert(((uintptr_t)gc->_gc_prev & PREV_MASK_COLLECTING) == prev_value);
-        assert(((uintptr_t)gc->_gc_next & NEXT_MASK_UNREACHABLE) == next_value);
+        assert(zandptr(gc->_gc_prev, PREV_MASK_COLLECTING) == prev_value);
+        assert(zandptr(gc->_gc_next, NEXT_MASK_UNREACHABLE) == next_value);
         prev = gc;
         gc = truenext;
     }
@@ -714,7 +714,7 @@ clear_unreachable_mask(PyGC_Head *unreachable)
     assert(((uintptr_t)unreachable & NEXT_MASK_UNREACHABLE) == 0);
 
     PyGC_Head *gc, *next;
-    assert((unreachable->_gc_next & NEXT_MASK_UNREACHABLE) == 0);
+    assert(((uintptr_t)unreachable->_gc_next & NEXT_MASK_UNREACHABLE) == 0);
     for (gc = GC_NEXT(unreachable); gc != unreachable; gc = next) {
         _PyObject_ASSERT((PyObject*)FROM_GC(gc), (uintptr_t)gc->_gc_next & NEXT_MASK_UNREACHABLE);
         gc->_gc_next = zandptr(gc->_gc_next, ~NEXT_MASK_UNREACHABLE);

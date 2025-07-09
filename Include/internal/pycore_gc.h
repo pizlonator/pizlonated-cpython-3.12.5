@@ -13,7 +13,7 @@ extern "C" {
 
 /* GC information is stored BEFORE the object structure. */
 typedef struct PyGC_Head PyGC_Head;
-struct {
+struct PyGC_Head {
     // Pointer to next object in the list.
     // 0 means the object is not tracked
     PyGC_Head* _gc_next;
